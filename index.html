@@ -1,0 +1,1206 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PDF Podpis</title>
+<meta name="description" content="Lokalne podpisywanie PDF i osadzanie podpisów PNG w XLSX bez wysyłania plików na serwer.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iV2Fyc3R3YV8xIiBkYXRhLW5hbWU9IldhcnN0d2EgMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2aWV3Qm94PSIwIDAgMTI4LjE1IDEyNy44MyI+CiAgPGRlZnM+CiAgICA8c3R5bGU+CiAgICAgIC5jbHMtMSB7CiAgICAgICAgZmlsbDogI2ZmZjsKICAgICAgfQoKICAgICAgLmNscy0yIHsKICAgICAgICBzdHJva2U6ICNmZmY7CiAgICAgICAgc3Ryb2tlLW1pdGVybGltaXQ6IDEwOwogICAgICAgIHN0cm9rZS13aWR0aDogMS44NXB4OwogICAgICB9CgogICAgICAuY2xzLTIsIC5jbHMtMyB7CiAgICAgICAgZmlsbDogIzFkMWQxYjsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPHJlY3QgY2xhc3M9ImNscy0zIiB3aWR0aD0iMTI4LjE1IiBoZWlnaHQ9IjEyNy44MyIgcng9IjEyLjA0IiByeT0iMTIuMDQiLz4KICA8cGF0aCBjbGFzcz0iY2xzLTIiIGQ9Ik0zMC4yNCw4MC43MmM0LjM5LTEzLjk1LDExLjA2LTM0Ljg3LDIwLjIyLTQ2LjM5LDkuMTYtMTEuNTIsMjIuMjctNi4xNCwzNi42Ny05LjkyLDkuMjctMi40NCwzMS41NC0xOC4zLDMyLjk2LTE2LjkyLjU2LjU1LTEuMTMsMjcuNTgtNS42MiwzNy41OC0zLjUyLDcuODQtMTAuODEsMTQuNjYtMTkuNTQsMTUuMTctMS4wNi4wNi0xMi4wOC02LjM5LTEzLjA1LTUuOTYtMi4zMSwxLjAxLDcuMSwxMC4zMiw2LjQ0LDEyLjcxLTIuNjQsOS42NS0xMi4xMywxNi4zMy0yMi4wNCwxOC43Mi05LjkxLDIuMzktMjUuODQtMy41NS0zNS45OC00LjciLz4KICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik04LjU3LDExOS4yNGMzLjE4LTEwLjExLDYuMy0yMC42NCwxMi45NS0yOS4xMSwxLjYxLTIuMTQsMy4yMy00LjIyLDQuODUtNi4zMiw1LjE1LTYuMjMsMTEuNDctMTEuMjksMTcuNzItMTYuMyw4LjM4LTYuNTgsMTcuMDUtMTIuNzQsMjUuODYtMTguNjksOC44NC01LjkyLDE3LjczLTExLjcxLDI3LjA1LTE3LDAsMCwxLjc4LDMuMjUsMS43OCwzLjI1LTE4LjM4LDEwLjI0LTM2LjIyLDIxLjg5LTUzLjA5LDM0LjUtNi4yMSw0LjgtMTIuNTEsOS42Ny0xNy42MSwxNS42Mi0yLjkyLDMuNTUtNy4zOSw4LjUtOS42OSwxMi40My00LjA1LDYuNzktNi42NywxNC4zNC05LjM4LDIxLjc2LDAsMC0uNDQtLjE1LS40NC0uMTVoMFoiLz4KPC9zdmc+">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+<script src="./vendor/jszip.min.js"></script>
+<script src="./xlsx-patcher.js"></script>
+<style>
+:root{
+  --bg:#17191d;
+  --panel:#23262c;
+  --panel2:#2d3138;
+  --text:#f4f5f7;
+  --muted:#aeb4bf;
+  --accent:#4da3ff;
+  --accent2:#1684ef;
+  --good:#42c77a;
+  --warn:#f2b84b;
+  --danger:#ee5e68;
+  --shadow:0 16px 48px rgba(0,0,0,.32);
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--text);overflow:hidden}
+button,input{font:inherit}
+button{
+  border:0;border-radius:10px;padding:10px 14px;background:var(--panel2);color:var(--text);
+  cursor:pointer;font-weight:600;transition:.15s transform,.15s background,.15s opacity
+}
+button:hover{background:#3a3f48}
+button:active{transform:translateY(1px)}
+button.primary{background:var(--accent2)}
+button.primary:hover{background:#2d93f2}
+button.success{background:#238c52}
+button.success:hover{background:#2ba563}
+button.danger{background:#9f3540}
+button:disabled{opacity:.45;cursor:not-allowed}
+#app{height:100%;display:grid;grid-template-rows:auto 1fr auto}
+header{
+  display:flex;gap:8px;align-items:center;padding:10px 12px;background:var(--panel);
+  box-shadow:0 2px 14px rgba(0,0,0,.25);z-index:5;flex-wrap:wrap
+}
+.brand{font-weight:800;margin-right:8px;letter-spacing:.2px}
+.sep{width:1px;height:30px;background:#464b55;margin:0 4px}
+.spacer{flex:1}
+#fileName{max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted);font-size:13px}
+main{position:relative;overflow:auto;background:#3d4046}
+#empty{
+  min-height:100%;display:flex;align-items:center;justify-content:center;padding:40px
+}
+.emptyCard{
+  width:min(680px,94vw);background:var(--panel);padding:36px;border-radius:18px;box-shadow:var(--shadow);text-align:center
+}
+.emptyCard h1{margin:0 0 12px;font-size:28px}
+.emptyCard p{color:var(--muted);line-height:1.5}
+.drop{
+  margin-top:22px;border:2px dashed #555c68;border-radius:16px;padding:42px 20px;cursor:pointer;
+  transition:.15s border-color,.15s background
+}
+.drop:hover,.drop.drag{border-color:var(--accent);background:rgba(77,163,255,.08)}
+#viewer{display:none;min-height:100%;padding:28px}
+#pageStage{
+  position:relative;margin:0 auto;background:#fff;box-shadow:var(--shadow);touch-action:none;user-select:none
+}
+#pdfCanvas{display:block;width:100%;height:100%;background:#fff}
+#overlay{position:absolute;inset:0}
+.field{
+  position:absolute;border:3px dashed var(--warn);background:rgba(242,184,75,.12);
+  display:flex;align-items:center;justify-content:center;text-align:center;color:#5b4300;
+  font-size:13px;font-weight:800;cursor:pointer;overflow:hidden;border-radius:4px
+}
+.field:hover{background:rgba(242,184,75,.22)}
+.field.signed{border-style:solid;border-color:var(--good);background:rgba(66,199,122,.06)}
+.field img{width:100%;height:100%;object-fit:contain;pointer-events:none}
+.field .fieldText{padding:5px;pointer-events:none}
+.field .remove{
+  display:none;position:absolute;right:3px;top:3px;width:22px;height:22px;padding:0;border-radius:50%;
+  background:var(--danger);color:white;line-height:22px;font-size:14px
+}
+body.editing .field .remove{display:block}
+body.editing .field{cursor:default}
+#dragRect{
+  display:none;position:absolute;border:3px solid var(--accent);background:rgba(77,163,255,.14);pointer-events:none
+}
+footer{
+  min-height:38px;padding:8px 12px;background:var(--panel);display:flex;align-items:center;gap:10px;
+  color:var(--muted);font-size:13px
+}
+.badge{padding:4px 8px;border-radius:999px;background:#30343c;color:#d9dde4}
+
+#excelPanel{display:none;min-height:100%;padding:28px}
+.excelCard{
+  width:min(980px,96vw);margin:0 auto;background:var(--panel);border-radius:18px;
+  padding:26px;box-shadow:var(--shadow)
+}
+.excelHeader{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap}
+.excelHeader h1{margin:0 0 7px;font-size:26px}
+.excelHeader p{margin:0;color:var(--muted);line-height:1.45}
+.excelTypeBadge{padding:7px 10px;border-radius:999px;background:#1e6a43;color:white;font-weight:800;font-size:12px}
+.excelGrid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.excelSection{background:#1d2025;border:1px solid #363b44;border-radius:14px;padding:18px;min-width:0}
+.excelSection h2{font-size:17px;margin:0 0 14px}
+.excelActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.signaturePreview{
+  height:150px;border-radius:12px;background:white;border:1px solid #606671;
+  display:flex;align-items:center;justify-content:center;color:#7b818b;overflow:hidden;padding:10px
+}
+.signaturePreview img{width:100%;height:100%;object-fit:contain}
+.excelFields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.excelFields .full{grid-column:1 / -1}
+.excelFields label{display:flex;flex-direction:column;gap:7px;color:var(--muted);font-size:13px;font-weight:700}
+.excelFields input,.excelFields select{
+  width:100%;border:1px solid #4b515c;background:#292d34;color:var(--text);border-radius:9px;
+  padding:10px 11px;outline:none
+}
+.excelFields input:focus,.excelFields select:focus{border-color:var(--accent)}
+.checkRow{display:flex!important;flex-direction:row!important;align-items:center;gap:8px!important;font-weight:600!important}
+.checkRow input{width:auto!important}
+.excelInfo{
+  margin-top:18px;background:#1d2025;border:1px solid #363b44;border-radius:12px;
+  padding:13px 15px;color:var(--muted);line-height:1.45;font-size:13px
+}
+.excelSuccess{color:#8de5b2}
+@media(max-width:760px){
+  .excelGrid{grid-template-columns:1fr}
+  .excelFields{grid-template-columns:1fr}
+  .excelFields .full{grid-column:auto}
+  #excelPanel{padding:12px}
+}
+
+#modal{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:20;align-items:center;justify-content:center;padding:20px
+}
+.modalCard{width:min(1000px,96vw);background:var(--panel);border-radius:18px;padding:20px;box-shadow:var(--shadow)}
+.modalHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.modalHeader h2{margin:0;font-size:22px}
+.modalHint{color:var(--muted);margin:0 0 12px}
+#signCanvas{
+  width:100%;height:340px;background:white;border-radius:12px;display:block;touch-action:none;cursor:crosshair
+}
+.modalButtons{display:flex;gap:8px;margin-top:14px;justify-content:flex-end}
+.modalButtons .left{margin-right:auto}
+#toast{
+  position:fixed;left:50%;bottom:58px;transform:translateX(-50%) translateY(20px);
+  background:#101216;color:#fff;padding:11px 16px;border-radius:10px;box-shadow:var(--shadow);
+  opacity:0;pointer-events:none;transition:.2s;z-index:50
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.loading{
+  position:fixed;inset:0;background:rgba(15,17,20,.82);display:none;align-items:center;justify-content:center;z-index:100
+}
+.loadingCard{background:var(--panel);padding:22px 26px;border-radius:14px;box-shadow:var(--shadow);font-weight:700}
+@media(max-width:900px){
+  header{gap:6px}
+  button{padding:9px 10px}
+  .sep{display:none}
+  #fileName{display:none}
+  #viewer{padding:12px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+<header>
+  <div class="brand">PDF Podpis</div>
+  <button id="openBtn" class="primary">Otwórz plik</button>
+  <input id="fileInput" type="file" accept="application/pdf,.pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.xlsx" hidden>
+  <div id="fileName">Brak dokumentu</div>
+
+  <div class="sep pdfOnly"></div>
+  <button id="prevBtn" class="pdfOnly" disabled>◀</button>
+  <span id="pageInfo" class="badge pdfOnly">— / —</span>
+  <button id="nextBtn" class="pdfOnly" disabled>▶</button>
+
+  <div class="sep pdfOnly"></div>
+  <button id="zoomOutBtn" class="pdfOnly" disabled>−</button>
+  <span id="zoomInfo" class="badge pdfOnly">100%</span>
+  <button id="zoomInBtn" class="pdfOnly" disabled>+</button>
+  <button id="fitBtn" class="pdfOnly" disabled>Dopasuj</button>
+
+  <div class="sep pdfOnly"></div>
+  <button id="editBtn" class="pdfOnly" disabled>Dodaj pola podpisu</button>
+  <button id="clearSignaturesBtn" class="pdfOnly" disabled>Wyczyść podpisy</button>
+
+  <div class="spacer"></div>
+  <button id="saveBtn" class="success" disabled>Zapisz</button>
+</header>
+
+<main id="main">
+  <div id="empty">
+    <div class="emptyCard">
+      <h1>Podpisywanie PDF i Excel</h1>
+      <p>Wgraj PDF, aby ustawić pola podpisów, albo plik XLSX, aby narysować podpis i osadzić jego PNG w wybranej komórce arkusza.</p>
+      <div id="drop" class="drop">
+        <strong>Przeciągnij tutaj PDF lub XLSX</strong><br><br>
+        <span style="color:var(--muted)">albo kliknij, aby wybrać plik</span>
+      </div>
+      <p style="font-size:12px;margin-top:18px">Pliki są przetwarzane lokalnie na komputerze. Aplikacja nie wysyła zawartości dokumentów na własny serwer.</p>
+    </div>
+  </div>
+
+  <div id="viewer">
+    <div id="pageStage">
+      <canvas id="pdfCanvas"></canvas>
+      <div id="overlay">
+        <div id="dragRect"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="excelPanel">
+    <div class="excelCard">
+      <div class="excelHeader">
+        <div>
+          <h1>Podpis do Excela</h1>
+          <p>Narysuj podpis, wybierz arkusz i komórkę, a aplikacja osadzi PNG podpisu bezpośrednio w pliku XLSX.</p>
+        </div>
+        <div class="excelTypeBadge">XLSX</div>
+      </div>
+
+      <div class="excelGrid">
+        <section class="excelSection">
+          <h2>1. Utwórz podpis</h2>
+          <div id="excelSignaturePreview" class="signaturePreview">
+            <span>Brak utworzonego podpisu</span>
+          </div>
+          <div class="excelActions">
+            <button id="createExcelSignature" class="primary">Utwórz podpis</button>
+            <button id="clearExcelSignature" disabled>Wyczyść podpis</button>
+          </div>
+        </section>
+
+        <section class="excelSection">
+          <h2>2. Wstaw PNG do komórki</h2>
+          <div class="excelFields">
+            <label class="full">Arkusz
+              <select id="sheetSelect"></select>
+            </label>
+            <label>Komórka
+              <input id="cellInput" type="text" value="A1" maxlength="12" placeholder="np. H27">
+            </label>
+            <label>Rozdzielczość PNG
+              <select id="signatureSize">
+                <option value="160x60">160 × 60 px</option>
+                <option value="200x75" selected>200 × 75 px</option>
+                <option value="240x90">240 × 90 px</option>
+                <option value="300x110">300 × 110 px</option>
+                <option value="600x220">600 × 220 px</option>
+              </select>
+            </label>
+            <label class="full checkRow">
+              <input id="autoNextRow" type="checkbox" checked>
+              Po wstawieniu przejdź do następnego wiersza
+            </label>
+          </div>
+          <div class="excelActions">
+            <button id="insertExcelSignature" class="success" disabled>Wstaw PNG do komórki</button>
+          </div>
+        </section>
+      </div>
+<div id="excelInfo" class="excelInfo">
+        Otwarty skoroszyt. Utwórz podpis, wybierz komórkę i kliknij „Wstaw PNG do komórki”.
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <span id="status">Gotowy.</span>
+  <span class="spacer"></span>
+  <span id="footerHint">PPM na polu = usuń pole</span>
+</footer>
+</div>
+
+<div id="modal">
+  <div class="modalCard">
+    <div class="modalHeader">
+      <h2>Złóż podpis</h2>
+      <button id="modalClose">✕</button>
+    </div>
+    <p class="modalHint">Podpisz się poniżej. Obsługiwane są mysz, ekran dotykowy i rysik/tablet.</p>
+    <canvas id="signCanvas" width="1200" height="420"></canvas>
+    <div class="modalButtons">
+      <button id="clearCanvas" class="left">Wyczyść</button>
+      <button id="cancelSign">Anuluj</button>
+      <button id="confirmSign" class="success">Zatwierdź podpis</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<div id="loading" class="loading"><div class="loadingCard" id="loadingText">Ładowanie…</div></div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+
+  const state = {
+    file: null,
+    fileType: null,
+    originalBytes: null,
+
+    pdf: null,
+    page: 1,
+    zoom: 1.25,
+    viewport: null,
+    fields: [],
+    editMode: false,
+    activeFieldId: null,
+
+    excelWorkbook: null,
+    excelSignature: null,
+    excelInsertions: 0,
+    excelOperations: [],
+
+    signatureTarget: null,
+    drawing: false,
+    lastPoint: null,
+    pressure: 0.5,
+    drag: null
+  };
+
+  const els = {
+    openBtn:$('openBtn'), fileInput:$('fileInput'), fileName:$('fileName'),
+    prevBtn:$('prevBtn'), nextBtn:$('nextBtn'), pageInfo:$('pageInfo'),
+    zoomOutBtn:$('zoomOutBtn'), zoomInBtn:$('zoomInBtn'), zoomInfo:$('zoomInfo'), fitBtn:$('fitBtn'),
+    editBtn:$('editBtn'), clearSignaturesBtn:$('clearSignaturesBtn'), saveBtn:$('saveBtn'),
+    main:$('main'), empty:$('empty'), viewer:$('viewer'), pageStage:$('pageStage'),
+    pdfCanvas:$('pdfCanvas'), overlay:$('overlay'), dragRect:$('dragRect'), drop:$('drop'),
+    excelPanel:$('excelPanel'), excelSignaturePreview:$('excelSignaturePreview'),
+    createExcelSignature:$('createExcelSignature'), clearExcelSignature:$('clearExcelSignature'),
+    sheetSelect:$('sheetSelect'), cellInput:$('cellInput'), signatureSize:$('signatureSize'),
+    autoNextRow:$('autoNextRow'), insertExcelSignature:$('insertExcelSignature'), excelInfo:$('excelInfo'),
+    footerHint:$('footerHint'),
+    status:$('status'), modal:$('modal'), signCanvas:$('signCanvas'),
+    modalClose:$('modalClose'), clearCanvas:$('clearCanvas'), cancelSign:$('cancelSign'), confirmSign:$('confirmSign'),
+    toast:$('toast'), loading:$('loading'), loadingText:$('loadingText')
+  };
+
+  function toast(msg) {
+    els.toast.textContent = msg;
+    els.toast.classList.add('show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => els.toast.classList.remove('show'), 2200);
+  }
+
+  function loading(show, text='Przetwarzanie…') {
+    els.loadingText.textContent = text;
+    els.loading.style.display = show ? 'flex' : 'none';
+  }
+
+  function status(msg) { els.status.textContent = msg; }
+
+  function setPdfControls(on) {
+    for (const el of [els.prevBtn, els.nextBtn, els.zoomOutBtn, els.zoomInBtn, els.fitBtn, els.editBtn, els.clearSignaturesBtn]) {
+      el.disabled = !on;
+    }
+  }
+
+  function setModeUI(mode) {
+    const isPdf = mode === 'pdf';
+    const isExcel = mode === 'xlsx';
+
+    document.querySelectorAll('.pdfOnly').forEach(el => {
+      el.style.display = isPdf ? '' : 'none';
+    });
+
+    els.empty.style.display = mode ? 'none' : 'flex';
+    els.viewer.style.display = isPdf ? 'block' : 'none';
+    els.excelPanel.style.display = isExcel ? 'block' : 'none';
+
+    setPdfControls(isPdf);
+    els.saveBtn.disabled = !mode;
+    els.saveBtn.textContent = isPdf ? 'Zapisz podpisany PDF' : (isExcel ? 'Zapisz Excel' : 'Zapisz');
+    els.footerHint.textContent = isPdf ? 'PPM na polu = usuń pole' : (isExcel ? 'PNG jest osadzane w skoroszycie' : '');
+  }
+
+  function templateKey() {
+    if (!state.file) return null;
+    return 'pdf-podpis-fields:' + state.file.name + ':' + state.file.size;
+  }
+
+  function saveTemplate() {
+    const key = templateKey();
+    if (!key) return;
+    const clean = state.fields.map(f => ({
+      id:f.id, page:f.page, x:f.x, y:f.y, w:f.w, h:f.h
+    }));
+    localStorage.setItem(key, JSON.stringify(clean));
+  }
+
+  function loadTemplate() {
+    const key = templateKey();
+    if (!key) return [];
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return [];
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr.map(f => ({...f, signature:null})) : [];
+    } catch { return []; }
+  }
+
+  async function loadFile(file) {
+    if (!file) return;
+
+    const name = file.name.toLowerCase();
+
+    if (name.endsWith('.pdf')) {
+      await loadPdfFile(file);
+      return;
+    }
+
+    if (name.endsWith('.xlsx')) {
+      await loadExcelFile(file);
+      return;
+    }
+
+    toast('Obsługiwane są pliki PDF i XLSX.');
+  }
+
+  async function loadPdfFile(file) {
+    if (!window.pdfjsLib || !window.PDFLib) {
+      alert('Nie udało się wczytać bibliotek PDF. Sprawdź połączenie z internetem i uruchom aplikację ponownie.');
+      return;
+    }
+
+    loading(true, 'Otwieranie PDF…');
+    try {
+      state.file = file;
+      state.fileType = 'pdf';
+      state.originalBytes = new Uint8Array(await file.arrayBuffer());
+
+      state.excelWorkbook = null;
+      state.excelSignature = null;
+      state.excelInsertions = 0;
+      state.excelOperations = [];
+
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+      state.pdf = await pdfjsLib.getDocument({data: state.originalBytes.slice()}).promise;
+      state.page = 1;
+      state.zoom = 1.25;
+      state.fields = loadTemplate();
+      state.editMode = false;
+      document.body.classList.remove('editing');
+
+      els.fileName.textContent = file.name;
+      setModeUI('pdf');
+
+      await renderPage();
+      fitPage();
+      status('PDF otwarty. Kliknij „Dodaj pola podpisu”, aby ustawić miejsca podpisów.');
+    } catch (e) {
+      console.error(e);
+      alert('Nie udało się otworzyć PDF:\\n\\n' + (e.message || e));
+    } finally {
+      loading(false);
+    }
+  }
+
+  async function loadExcelFile(file) {
+    if (!window.ExcelJS) {
+      alert('Nie udało się wczytać modułu Excel. Sprawdź połączenie z internetem i uruchom aplikację ponownie.');
+      return;
+    }
+
+    loading(true, 'Otwieranie pliku Excel…');
+    try {
+      state.file = file;
+      state.fileType = 'xlsx';
+      const buffer = await file.arrayBuffer();
+      state.originalBytes = new Uint8Array(buffer);
+
+      state.pdf = null;
+      state.fields = [];
+      state.editMode = false;
+      document.body.classList.remove('editing');
+
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.load(buffer);
+      state.excelWorkbook = workbook;
+      state.excelSignature = null;
+      state.excelInsertions = 0;
+      state.excelOperations = [];
+
+      els.fileName.textContent = file.name;
+      populateSheetSelect();
+      updateExcelSignaturePreview();
+      els.cellInput.value = 'A1';
+      els.excelInfo.textContent = `Wczytano ${workbook.worksheets.length} arkusz(y). Utwórz podpis i wybierz komórkę.`;
+
+      setModeUI('xlsx');
+      status('Excel otwarty. Utwórz podpis i wskaż komórkę, do której ma zostać osadzony PNG.');
+    } catch (e) {
+      console.error(e);
+      alert('Nie udało się otworzyć XLSX:\\n\\n' + (e.message || e));
+    } finally {
+      loading(false);
+    }
+  }
+
+  function populateSheetSelect() {
+    els.sheetSelect.innerHTML = '';
+    if (!state.excelWorkbook) return;
+
+    state.excelWorkbook.worksheets.forEach((ws, index) => {
+      const option = document.createElement('option');
+      option.value = String(index);
+      option.textContent = ws.name;
+      els.sheetSelect.appendChild(option);
+    });
+  }
+
+  function updateExcelSignaturePreview() {
+    els.excelSignaturePreview.innerHTML = '';
+
+    if (!state.excelSignature) {
+      const span = document.createElement('span');
+      span.textContent = 'Brak utworzonego podpisu';
+      els.excelSignaturePreview.appendChild(span);
+      els.clearExcelSignature.disabled = true;
+      els.insertExcelSignature.disabled = true;
+      return;
+    }
+
+    const img = document.createElement('img');
+    img.src = state.excelSignature;
+    img.alt = 'Podgląd podpisu';
+    els.excelSignaturePreview.appendChild(img);
+    els.clearExcelSignature.disabled = false;
+    els.insertExcelSignature.disabled = !state.excelWorkbook;
+  }
+
+  function parseCellAddress(value) {
+    const clean = String(value || '').trim().toUpperCase().replace(/\$/g, '');
+    const match = /^([A-Z]{1,3})([1-9][0-9]{0,6})$/.exec(clean);
+    if (!match) return null;
+
+    let col = 0;
+    for (const ch of match[1]) {
+      col = col * 26 + (ch.charCodeAt(0) - 64);
+    }
+
+    const row = Number(match[2]);
+    if (col < 1 || col > 16384 || row < 1 || row > 1048576) return null;
+
+    return {address: clean, col, row, letters: match[1]};
+  }
+
+  function advanceCellRow(parsed) {
+    if (!parsed || !els.autoNextRow.checked || parsed.row >= 1048576) return;
+    els.cellInput.value = parsed.letters + String(parsed.row + 1);
+  }
+
+  async function resizeSignatureDataUrl(dataUrl, width, height) {
+    const image = new Image();
+    image.src = dataUrl;
+    await new Promise((resolve, reject) => {
+      image.onload = resolve;
+      image.onerror = () => reject(new Error('Nie udało się przygotować PNG podpisu.'));
+    });
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, width, height);
+
+    const scale = Math.min(width / image.naturalWidth, height / image.naturalHeight);
+    const drawW = image.naturalWidth * scale;
+    const drawH = image.naturalHeight * scale;
+    const x = (width - drawW) / 2;
+    const y = (height - drawH) / 2;
+    ctx.drawImage(image, x, y, drawW, drawH);
+    return canvas.toDataURL('image/png');
+  }
+
+  async function insertSignatureIntoExcel() {
+    if (!state.excelWorkbook || !state.excelSignature) {
+      toast('Najpierw utwórz podpis.');
+      return;
+    }
+
+    const parsed = parseCellAddress(els.cellInput.value);
+    if (!parsed) {
+      alert('Nieprawidłowy adres komórki. Przykład: H27');
+      els.cellInput.focus();
+      return;
+    }
+
+    const sheetIndex = Number(els.sheetSelect.value);
+    const worksheet = state.excelWorkbook.worksheets[sheetIndex];
+    if (!worksheet) {
+      alert('Wybierz arkusz.');
+      return;
+    }
+
+    const [pngWidth, pngHeight] = els.signatureSize.value.split('x').map(Number);
+    let pngDataUrl;
+    try {
+      pngDataUrl = await resizeSignatureDataUrl(state.excelSignature, pngWidth, pngHeight);
+    } catch (e) {
+      alert(e.message || e);
+      return;
+    }
+
+    // Operacja jest zapisywana bezpośrednio do struktury OOXML XLSX.
+    // Nie używamy ExcelJS do obrazka (bo zrobiłby pływający obiekt)
+    // i nie wymagamy zainstalowanego Microsoft Excela.
+    const key = worksheet.name + '!' + parsed.address;
+    const op = {
+      sheet: worksheet.name,
+      cell: parsed.address,
+      pngDataUrl,
+      resolution: `${pngWidth}x${pngHeight}`
+    };
+
+    const existing = state.excelOperations.findIndex(
+      x => (x.sheet + '!' + x.cell) === key
+    );
+
+    if (existing >= 0) {
+      state.excelOperations[existing] = op;
+    } else {
+      state.excelOperations.push(op);
+    }
+
+    state.excelInsertions = state.excelOperations.length;
+
+    els.excelInfo.innerHTML =
+      `<span class="excelSuccess">✓ Dodano do kolejki</span> <strong>${worksheet.name}!${parsed.address}</strong>. ` +
+      `PNG ${op.resolution} zostanie zapisane w formacie zgodnym z ręcznym <strong>Obrazem w komórce</strong>. ` +
+      `Łącznie: ${state.excelInsertions}.`;
+
+    status(`Podpis przygotowany dla ${worksheet.name}!${parsed.address} jako „Obraz w komórce”.`);
+    toast('Dodano podpis „W komórce”.');
+    advanceCellRow(parsed);
+  }
+
+  async function saveExcel() {
+    if (!state.excelWorkbook || !state.file || !state.originalBytes) return;
+
+    if (!state.excelOperations.length) {
+      alert('Nie dodano jeszcze żadnego podpisu do komórki.');
+      return;
+    }
+
+    if (!window.XLSXInCell || typeof XLSXInCell.patchXlsxInCell !== 'function') {
+      alert('Moduł zapisu XLSX nie został załadowany. Odśwież stronę.');
+      return;
+    }
+
+    loading(true, 'Zapisywanie obrazów w komórkach do XLSX…');
+
+    try {
+      // Cała operacja odbywa się lokalnie w przeglądarce.
+      // Żaden XLSX ani PNG nie jest wysyłany do GitHub Pages ani innego backendu.
+      const bytes = await XLSXInCell.patchXlsxInCell(
+        state.originalBytes.slice(),
+        state.excelOperations.map(op => ({
+          sheet: op.sheet,
+          cell: op.cell,
+          pngDataUrl: op.pngDataUrl
+        }))
+      );
+
+      const suggested = state.file.name.replace(/\.xlsx$/i, '') + '_podpisany.xlsx';
+
+      if (window.showSaveFilePicker) {
+        try {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: suggested,
+            types: [{
+              description:'Skoroszyt Excel',
+              accept:{'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':['.xlsx']}
+            }]
+          });
+          const writable = await handle.createWritable();
+          await writable.write(bytes);
+          await writable.close();
+          toast('Excel zapisany.');
+          status('Zapisano XLSX lokalnie w przeglądarce.');
+          return;
+        } catch (e) {
+          if (e && e.name === 'AbortError') return;
+          console.warn('File picker fallback', e);
+        }
+      }
+
+      const blob = new Blob([bytes], {
+        type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = suggested;
+      document.body.appendChild(a);
+      a.click();
+
+      setTimeout(() => {
+        URL.revokeObjectURL(a.href);
+        a.remove();
+      }, 3000);
+
+      toast('Excel zapisany.');
+      status('Zapisano XLSX lokalnie w przeglądarce.');
+    } catch (e) {
+      console.error(e);
+      alert(
+        'Nie udało się zapisać XLSX.\n\n' + (e.message || e)
+      );
+    } finally {
+      loading(false);
+    }
+  }
+
+  async function renderPage() {
+    if (!state.pdf) return;
+
+    loading(true, 'Renderowanie strony…');
+    try {
+      const page = await state.pdf.getPage(state.page);
+      const viewport = page.getViewport({scale: state.zoom});
+      state.viewport = viewport;
+
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      els.pdfCanvas.width = Math.floor(viewport.width * dpr);
+      els.pdfCanvas.height = Math.floor(viewport.height * dpr);
+      els.pdfCanvas.style.width = viewport.width + 'px';
+      els.pdfCanvas.style.height = viewport.height + 'px';
+
+      els.pageStage.style.width = viewport.width + 'px';
+      els.pageStage.style.height = viewport.height + 'px';
+
+      const ctx = els.pdfCanvas.getContext('2d', {alpha:false});
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+
+      await page.render({
+        canvasContext: ctx,
+        viewport: viewport
+      }).promise;
+
+      els.pageInfo.textContent = state.page + ' / ' + state.pdf.numPages;
+      els.zoomInfo.textContent = Math.round(state.zoom * 100) + '%';
+
+      renderFields();
+    } catch (e) {
+      console.error(e);
+      alert('Błąd renderowania strony:\\n\\n' + (e.message || e));
+    } finally {
+      loading(false);
+    }
+  }
+
+  function renderFields() {
+    els.overlay.querySelectorAll('.field').forEach(el => el.remove());
+
+    state.fields.filter(f => f.page === state.page).forEach(field => {
+      const div = document.createElement('div');
+      div.className = 'field' + (field.signature ? ' signed' : '');
+      div.dataset.id = field.id;
+      div.style.left = (field.x * 100) + '%';
+      div.style.top = (field.y * 100) + '%';
+      div.style.width = (field.w * 100) + '%';
+      div.style.height = (field.h * 100) + '%';
+
+      if (field.signature) {
+        const img = document.createElement('img');
+        img.src = field.signature;
+        div.appendChild(img);
+      } else {
+        const txt = document.createElement('div');
+        txt.className = 'fieldText';
+        txt.textContent = 'PODPISZ TUTAJ';
+        div.appendChild(txt);
+      }
+
+      const remove = document.createElement('button');
+      remove.className = 'remove';
+      remove.textContent = '×';
+      remove.title = 'Usuń pole';
+      remove.addEventListener('click', ev => {
+        ev.stopPropagation();
+        removeField(field.id);
+      });
+      div.appendChild(remove);
+
+      div.addEventListener('click', ev => {
+        ev.stopPropagation();
+        if (state.editMode) return;
+        openSignature(field.id);
+      });
+
+      div.addEventListener('contextmenu', ev => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        if (confirm('Usunąć to pole podpisu?')) removeField(field.id);
+      });
+
+      els.overlay.appendChild(div);
+    });
+  }
+
+  function removeField(id) {
+    state.fields = state.fields.filter(f => f.id !== id);
+    saveTemplate();
+    renderFields();
+    status('Pole podpisu usunięte.');
+  }
+
+  function setEditMode(on) {
+    state.editMode = on;
+    document.body.classList.toggle('editing', on);
+    els.editBtn.textContent = on ? 'Zakończ dodawanie' : 'Dodaj pola podpisu';
+    els.overlay.style.cursor = on ? 'crosshair' : 'default';
+    status(on
+      ? 'Tryb dodawania: przeciągnij prostokąt w miejscu podpisu.'
+      : 'Kliknij pole „PODPISZ TUTAJ”, aby złożyć podpis.');
+  }
+
+  function overlayPoint(ev) {
+    const r = els.overlay.getBoundingClientRect();
+    const x = Math.max(0, Math.min(r.width, ev.clientX - r.left));
+    const y = Math.max(0, Math.min(r.height, ev.clientY - r.top));
+    return {x, y, r};
+  }
+
+  els.overlay.addEventListener('pointerdown', ev => {
+    if (!state.editMode || !state.viewport) return;
+    if (ev.target.closest('.field')) return;
+
+    ev.preventDefault();
+    const p = overlayPoint(ev);
+    state.drag = {x:p.x, y:p.y, width:p.r.width, height:p.r.height};
+    els.dragRect.style.display = 'block';
+    els.dragRect.style.left = p.x + 'px';
+    els.dragRect.style.top = p.y + 'px';
+    els.dragRect.style.width = '0px';
+    els.dragRect.style.height = '0px';
+    try { els.overlay.setPointerCapture(ev.pointerId); } catch {}
+  });
+
+  els.overlay.addEventListener('pointermove', ev => {
+    if (!state.drag) return;
+    const p = overlayPoint(ev);
+    const x = Math.min(state.drag.x, p.x);
+    const y = Math.min(state.drag.y, p.y);
+    const w = Math.abs(p.x - state.drag.x);
+    const h = Math.abs(p.y - state.drag.y);
+
+    els.dragRect.style.left = x + 'px';
+    els.dragRect.style.top = y + 'px';
+    els.dragRect.style.width = w + 'px';
+    els.dragRect.style.height = h + 'px';
+  });
+
+  els.overlay.addEventListener('pointerup', ev => {
+    if (!state.drag) return;
+    const p = overlayPoint(ev);
+
+    const xPx = Math.min(state.drag.x, p.x);
+    const yPx = Math.min(state.drag.y, p.y);
+    const wPx = Math.abs(p.x - state.drag.x);
+    const hPx = Math.abs(p.y - state.drag.y);
+
+    els.dragRect.style.display = 'none';
+
+    if (wPx >= 70 && hPx >= 35) {
+      state.fields.push({
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random(),
+        page: state.page,
+        x: xPx / state.drag.width,
+        y: yPx / state.drag.height,
+        w: wPx / state.drag.width,
+        h: hPx / state.drag.height,
+        signature: null
+      });
+      saveTemplate();
+      renderFields();
+      toast('Pole podpisu dodane.');
+    } else {
+      toast('Pole jest za małe.');
+    }
+
+    state.drag = null;
+  });
+
+  function fitPage() {
+    if (!state.pdf || !state.viewport) return;
+    state.pdf.getPage(state.page).then(page => {
+      const base = page.getViewport({scale:1});
+      const availableW = Math.max(320, els.main.clientWidth - 70);
+      const availableH = Math.max(320, els.main.clientHeight - 60);
+      state.zoom = Math.max(.35, Math.min(2.5, availableW / base.width, availableH / base.height));
+      renderPage();
+    });
+  }
+
+  function openSignature(fieldId) {
+    state.signatureTarget = 'pdf';
+    state.activeFieldId = fieldId;
+    clearSignatureCanvas();
+    els.modal.style.display = 'flex';
+    setTimeout(() => els.signCanvas.focus(), 50);
+  }
+
+  function openExcelSignature() {
+    state.signatureTarget = 'excel';
+    state.activeFieldId = null;
+    clearSignatureCanvas();
+    els.modal.style.display = 'flex';
+    setTimeout(() => els.signCanvas.focus(), 50);
+  }
+
+  function closeSignature() {
+    state.activeFieldId = null;
+    state.signatureTarget = null;
+    els.modal.style.display = 'none';
+    clearSignatureCanvas();
+  }
+
+  const sctx = els.signCanvas.getContext('2d');
+  sctx.lineCap = 'round';
+  sctx.lineJoin = 'round';
+
+  function canvasPoint(ev) {
+    const r = els.signCanvas.getBoundingClientRect();
+    return {
+      x: (ev.clientX - r.left) * (els.signCanvas.width / r.width),
+      y: (ev.clientY - r.top) * (els.signCanvas.height / r.height)
+    };
+  }
+
+  els.signCanvas.addEventListener('pointerdown', ev => {
+    ev.preventDefault();
+    state.drawing = true;
+    state.lastPoint = canvasPoint(ev);
+    state.pressure = ev.pressure > 0 ? ev.pressure : .5;
+    try { els.signCanvas.setPointerCapture(ev.pointerId); } catch {}
+  });
+
+  els.signCanvas.addEventListener('pointermove', ev => {
+    if (!state.drawing || !state.lastPoint) return;
+    ev.preventDefault();
+    const p = canvasPoint(ev);
+    const pressure = ev.pressure > 0 ? ev.pressure : state.pressure || .5;
+    sctx.strokeStyle = '#111';
+    sctx.lineWidth = 3.2 + pressure * 3.4;
+    sctx.beginPath();
+    sctx.moveTo(state.lastPoint.x, state.lastPoint.y);
+    sctx.lineTo(p.x, p.y);
+    sctx.stroke();
+    state.lastPoint = p;
+    state.pressure = pressure;
+  });
+
+  function endStroke(ev) {
+    if (!state.drawing) return;
+    state.drawing = false;
+    state.lastPoint = null;
+  }
+  els.signCanvas.addEventListener('pointerup', endStroke);
+  els.signCanvas.addEventListener('pointercancel', endStroke);
+  els.signCanvas.addEventListener('pointerleave', ev => {
+    if (ev.buttons === 0) endStroke(ev);
+  });
+
+  function clearSignatureCanvas() {
+    sctx.clearRect(0,0,els.signCanvas.width,els.signCanvas.height);
+    state.drawing = false;
+    state.lastPoint = null;
+  }
+
+  function trimmedSignatureDataURL() {
+    const src = sctx.getImageData(0,0,els.signCanvas.width,els.signCanvas.height);
+    const d = src.data;
+    let minX = els.signCanvas.width, minY = els.signCanvas.height, maxX = -1, maxY = -1;
+
+    for (let y=0; y<els.signCanvas.height; y++) {
+      for (let x=0; x<els.signCanvas.width; x++) {
+        const a = d[(y*els.signCanvas.width+x)*4+3];
+        if (a > 10) {
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+      }
+    }
+
+    if (maxX < minX || maxY < minY) return null;
+
+    const pad = 18;
+    minX = Math.max(0, minX-pad);
+    minY = Math.max(0, minY-pad);
+    maxX = Math.min(els.signCanvas.width-1, maxX+pad);
+    maxY = Math.min(els.signCanvas.height-1, maxY+pad);
+
+    const w = maxX-minX+1, h = maxY-minY+1;
+    const out = document.createElement('canvas');
+    out.width = w; out.height = h;
+    out.getContext('2d').drawImage(els.signCanvas, minX,minY,w,h,0,0,w,h);
+    return out.toDataURL('image/png');
+  }
+
+  function dataUrlToBytes(dataUrl) {
+    const base64 = dataUrl.split(',')[1];
+    const bin = atob(base64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
+    return bytes;
+  }
+
+  async function savePdf() {
+    const signed = state.fields.filter(f => f.signature);
+    if (!signed.length) {
+      alert('Nie ma jeszcze żadnego podpisu.');
+      return;
+    }
+
+    loading(true, 'Zapisywanie podpisów w PDF…');
+    try {
+      const pdfDoc = await PDFLib.PDFDocument.load(state.originalBytes.slice());
+      const pages = pdfDoc.getPages();
+
+      for (const field of signed) {
+        const page = pages[field.page - 1];
+        if (!page) continue;
+
+        const png = await pdfDoc.embedPng(dataUrlToBytes(field.signature));
+        const size = page.getSize();
+
+        const boxX = field.x * size.width;
+        const boxW = field.w * size.width;
+        const boxH = field.h * size.height;
+        const boxY = size.height - ((field.y + field.h) * size.height);
+
+        const factor = Math.min(boxW / png.width, boxH / png.height);
+        const drawW = png.width * factor;
+        const drawH = png.height * factor;
+
+        page.drawImage(png, {
+          x: boxX + (boxW - drawW) / 2,
+          y: boxY + (boxH - drawH) / 2,
+          width: drawW,
+          height: drawH
+        });
+      }
+
+      const bytes = await pdfDoc.save();
+      const suggested = state.file.name.replace(/\.pdf$/i,'') + '_podpisany.pdf';
+
+      if (window.showSaveFilePicker) {
+        try {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: suggested,
+            types: [{description:'Dokument PDF', accept:{'application/pdf':['.pdf']}}]
+          });
+          const writable = await handle.createWritable();
+          await writable.write(bytes);
+          await writable.close();
+          toast('Podpisany PDF zapisany.');
+          status('Zapisano podpisany dokument.');
+          return;
+        } catch (e) {
+          if (e && e.name === 'AbortError') return;
+          console.warn('File picker fallback', e);
+        }
+      }
+
+      const blob = new Blob([bytes], {type:'application/pdf'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = suggested;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        URL.revokeObjectURL(a.href);
+        a.remove();
+      }, 3000);
+      toast('Podpisany PDF zapisany.');
+    } catch (e) {
+      console.error(e);
+      alert('Nie udało się zapisać PDF:\\n\\n' + (e.message || e));
+    } finally {
+      loading(false);
+    }
+  }
+
+  function clearAllSignatures() {
+    if (!state.fields.some(f => f.signature)) return;
+    if (!confirm('Usunąć wszystkie złożone podpisy? Pola pozostaną.')) return;
+    state.fields.forEach(f => f.signature = null);
+    renderFields();
+    status('Podpisy wyczyszczone. Pola pozostały.');
+  }
+
+  els.openBtn.onclick = () => {
+    els.fileInput.value = '';
+    els.fileInput.click();
+  };
+  els.drop.onclick = () => {
+    els.fileInput.value = '';
+    els.fileInput.click();
+  };
+  els.fileInput.onchange = () => loadFile(els.fileInput.files[0]);
+
+  for (const eventName of ['dragenter','dragover']) {
+    els.drop.addEventListener(eventName, ev => {
+      ev.preventDefault();
+      els.drop.classList.add('drag');
+    });
+  }
+  for (const eventName of ['dragleave','drop']) {
+    els.drop.addEventListener(eventName, ev => {
+      ev.preventDefault();
+      els.drop.classList.remove('drag');
+    });
+  }
+  els.drop.addEventListener('drop', ev => loadFile(ev.dataTransfer.files[0]));
+
+  els.prevBtn.onclick = async () => {
+    if (state.page > 1) { state.page--; await renderPage(); }
+  };
+  els.nextBtn.onclick = async () => {
+    if (state.pdf && state.page < state.pdf.numPages) { state.page++; await renderPage(); }
+  };
+  els.zoomOutBtn.onclick = async () => {
+    state.zoom = Math.max(.35, state.zoom / 1.18); await renderPage();
+  };
+  els.zoomInBtn.onclick = async () => {
+    state.zoom = Math.min(3.5, state.zoom * 1.18); await renderPage();
+  };
+  els.fitBtn.onclick = fitPage;
+  els.editBtn.onclick = () => setEditMode(!state.editMode);
+  els.clearSignaturesBtn.onclick = clearAllSignatures;
+  els.saveBtn.onclick = () => {
+    if (state.fileType === 'pdf') savePdf();
+    else if (state.fileType === 'xlsx') saveExcel();
+  };
+
+  els.clearCanvas.onclick = clearSignatureCanvas;
+  els.modalClose.onclick = closeSignature;
+  els.cancelSign.onclick = closeSignature;
+  els.confirmSign.onclick = () => {
+    const sig = trimmedSignatureDataURL();
+    if (!sig) {
+      toast('Najpierw narysuj podpis.');
+      return;
+    }
+
+    if (state.signatureTarget === 'excel') {
+      state.excelSignature = sig;
+      updateExcelSignaturePreview();
+      els.excelInfo.textContent = 'Podpis gotowy. Wybierz arkusz i komórkę, a następnie kliknij „Wstaw PNG do komórki”. Przy zapisie PNG zostanie wpisane bezpośrednio do formatu XLSX jako prawdziwe „Obraz w komórce”.';
+      status('Podpis utworzony. Możesz osadzić go w wybranej komórce Excela.');
+      closeSignature();
+      return;
+    }
+
+    const field = state.fields.find(f => f.id === state.activeFieldId);
+    if (field) {
+      field.signature = sig;
+      renderFields();
+      status('Podpis zapisany w polu. Można przekazać urządzenie kolejnej osobie.');
+    }
+    closeSignature();
+  };
+
+  els.createExcelSignature.onclick = openExcelSignature;
+  els.clearExcelSignature.onclick = () => {
+    state.excelSignature = null;
+    updateExcelSignaturePreview();
+    els.excelInfo.textContent = 'Podpis wyczyszczony. Utwórz nowy podpis, aby wstawić go do Excela.';
+    status('Podpis Excel wyczyszczony.');
+  };
+  els.insertExcelSignature.onclick = insertSignatureIntoExcel;
+  els.cellInput.addEventListener('input', () => {
+    els.cellInput.value = els.cellInput.value.toUpperCase().replace(/[^A-Z0-9$]/g, '').slice(0, 12);
+  });
+
+  els.modal.addEventListener('click', ev => {
+    if (ev.target === els.modal) closeSignature();
+  });
+
+  document.addEventListener('keydown', ev => {
+    if (ev.key === 'Escape' && els.modal.style.display === 'flex') closeSignature();
+  });
+
+
+  setModeUI(null);
+
+  setTimeout(() => {
+    if (!window.pdfjsLib || !window.PDFLib || !window.ExcelJS || !window.JSZip || !window.XLSXInCell) {
+      status('Nie wszystkie moduły zostały załadowane — sprawdź połączenie z internetem.');
+    }
+  }, 5000);
+})();
+</script>
+</body>
+</html>
