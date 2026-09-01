@@ -4,3 +4,4 @@ Aplikacja Pozwala na stworzenie wirtualnego (nie oficjanlego podpisu) i wstawien
 
 Po otworzeniu strony wrzuc plik PDF/Excel wybierz miejsce w ktorym ma znalezc sie podpis i podpisz.
 
+Wszystko dzieje się lokalnie, żadne dane nie trafiają na żaden serwer, wiec wszystkie dane pozostaja bezpieczne.
